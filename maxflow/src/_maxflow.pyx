@@ -555,7 +555,56 @@ cdef public class GraphInt [object PyObject_GraphInt, type GraphInt]:
                 g.add_edge(i, 't', weight=-rcap)
         
         return g
-    
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    def get_edge_rcaps(self, np.ndarray[np.int64_t, ndim=2] nodes_id):
+        """
+        Returns the residual capacity on each arc in the graph. Given a numpy
+        array of shape (nedges, 2) specifying the starting and ending nodes of
+        each arch, this function returns a (nedges,) array containing the
+        residual capacities of the arcs, in the same order. Negative node ids
+        must be used to specify the source (-1) and sink (-2). If an arc does
+        not exist, a -1 residual capacity is returned
+        """
+
+        cdef uintptr_t e
+        cdef int i, n_from, n_to
+        cdef double cap
+        cdef int found
+
+        cdef int num_edges = self.get_edge_count()
+        cdef int num_results = nodes_id.shape[0]
+
+        cdef np.ndarray[np.int64_t, ndim=1, mode='c'] rcap = \
+            np.zeros((num_results,), dtype=np.int64, order='C')
+
+        for i in range(num_results):
+            n_from = nodes_id[i, 0]
+            n_to = nodes_id[i, 1]
+
+            if n_from == -1:
+                cap = self.thisptr.get_trcap(n_to)
+                if cap > 0:
+                    rcap[i] = cap
+            elif n_to == -2:
+                cap = self.thisptr.get_trcap(n_from)
+                if cap < 0:
+                    rcap[i] = -cap
+            else:
+                e = self.thisptr.get_first_arc()
+                found = 0
+                for j in range(num_edges):
+                    if n_from == self.thisptr.get_arc_from(e) and \
+                        n_to == self.thisptr.get_arc_to(e):
+                        rcap[i] = self.thisptr.get_rcap(e)
+                        found = 1
+                        break
+                    e = self.thisptr.get_next_arc(e)
+                if not found:
+                    rcap[i] = -1
+        return rcap
 
 cdef public class GraphFloat [object PyObject_GraphFloat, type GraphFloat]:
     cdef Graph[double, double, double]* thisptr
@@ -1000,7 +1049,56 @@ cdef public class GraphFloat [object PyObject_GraphFloat, type GraphFloat]:
                 g.add_edge(i, 't', weight=-rcap)
         
         return g
-    
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    def get_edge_rcaps(self, np.ndarray[np.int64_t, ndim=2] nodes_id):
+        """
+        Returns the residual capacity on each arc in the graph. Given a numpy
+        array of shape (nedges, 2) specifying the starting and ending nodes of
+        each arch, this function returns a (nedges,) array containing the
+        residual capacities of the arcs, in the same order. Negative node ids
+        must be used to specify the source (-1) and sink (-2). If an arc does
+        not exist, a -1 residual capacity is returned
+        """
+
+        cdef uintptr_t e
+        cdef int i, n_from, n_to
+        cdef double cap
+        cdef int found
+
+        cdef int num_edges = self.get_edge_count()
+        cdef int num_results = nodes_id.shape[0]
+
+        cdef np.ndarray[np.float64_t, ndim=1, mode='c'] rcap = \
+            np.zeros((num_results,), dtype=np.float64, order='C')
+
+        for i in range(num_results):
+            n_from = nodes_id[i, 0]
+            n_to = nodes_id[i, 1]
+
+            if n_from == -1:
+                cap = self.thisptr.get_trcap(n_to)
+                if cap > 0:
+                    rcap[i] = cap
+            elif n_to == -2:
+                cap = self.thisptr.get_trcap(n_from)
+                if cap < 0:
+                    rcap[i] = -cap
+            else:
+                e = self.thisptr.get_first_arc()
+                found = 0
+                for j in range(num_edges):
+                    if n_from == self.thisptr.get_arc_from(e) and \
+                        n_to == self.thisptr.get_arc_to(e):
+                        rcap[i] = self.thisptr.get_rcap(e)
+                        found = 1
+                        break
+                    e = self.thisptr.get_next_arc(e)
+                if not found:
+                    rcap[i] = -1
+        return rcap
 
 def moore_structure(ndim=2, directed=False):
     """
