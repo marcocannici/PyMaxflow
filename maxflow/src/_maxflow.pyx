@@ -571,7 +571,7 @@ cdef public class GraphInt [object PyObject_GraphInt, type GraphInt]:
 
         cdef uintptr_t e
         cdef int i, n_from, n_to
-        cdef double cap
+        cdef long cap
         cdef int found
 
         cdef int num_edges = self.get_edge_count()
