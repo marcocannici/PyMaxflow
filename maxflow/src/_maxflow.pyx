@@ -579,6 +579,8 @@ cdef public class GraphInt [object PyObject_GraphInt, type GraphInt]:
 
         cdef np.ndarray[np.int64_t, ndim=1, mode='c'] rcap = \
             np.zeros((num_results,), dtype=np.int64, order='C')
+        cdef np.ndarray[np.uint8_t, ndim=1, mode='c'] notfound = \
+            np.ones((num_results,), dtype=np.bool, order='C')
 
         for i in range(num_results):
             n_from = nodes_id[i, 0]
@@ -588,22 +590,23 @@ cdef public class GraphInt [object PyObject_GraphInt, type GraphInt]:
                 cap = self.thisptr.get_trcap(n_to)
                 if cap > 0:
                     rcap[i] = cap
+                notfound[i] = False
             elif n_to == -2:
                 cap = self.thisptr.get_trcap(n_from)
                 if cap < 0:
                     rcap[i] = -cap
+                notfound[i] = False
             else:
                 e = self.thisptr.get_first_arc()
-                found = 0
                 for j in range(num_edges):
                     if n_from == self.thisptr.get_arc_from(e) and \
                         n_to == self.thisptr.get_arc_to(e):
-                        rcap[i] = self.thisptr.get_rcap(e)
-                        found = 1
-                        break
+                        cap = self.thisptr.get_rcap(e)
+                        if cap != 0:
+                            rcap[i] = rcap[i] + cap
+                            notfound[i] = False
                     e = self.thisptr.get_next_arc(e)
-                if not found:
-                    rcap[i] = -1
+        rcap[notfound] = -1
         return rcap
 
 cdef public class GraphFloat [object PyObject_GraphFloat, type GraphFloat]:
@@ -1073,6 +1076,8 @@ cdef public class GraphFloat [object PyObject_GraphFloat, type GraphFloat]:
 
         cdef np.ndarray[np.float64_t, ndim=1, mode='c'] rcap = \
             np.zeros((num_results,), dtype=np.float64, order='C')
+        cdef np.ndarray[np.uint8_t, ndim=1, mode='c'] notfound = \
+            np.ones((num_results,), dtype=np.bool, order='C')
 
         for i in range(num_results):
             n_from = nodes_id[i, 0]
@@ -1082,22 +1087,24 @@ cdef public class GraphFloat [object PyObject_GraphFloat, type GraphFloat]:
                 cap = self.thisptr.get_trcap(n_to)
                 if cap > 0:
                     rcap[i] = cap
+                notfound[i] = False
             elif n_to == -2:
                 cap = self.thisptr.get_trcap(n_from)
                 if cap < 0:
                     rcap[i] = -cap
+                notfound[i] = False
             else:
                 e = self.thisptr.get_first_arc()
                 found = 0
                 for j in range(num_edges):
                     if n_from == self.thisptr.get_arc_from(e) and \
                         n_to == self.thisptr.get_arc_to(e):
-                        rcap[i] = self.thisptr.get_rcap(e)
-                        found = 1
-                        break
+                        cap = self.thisptr.get_rcap(e)
+                        if cap != 0.0:
+                            rcap[i] = rcap[i] + cap
+                            notfound[i] = False
                     e = self.thisptr.get_next_arc(e)
-                if not found:
-                    rcap[i] = -1
+        rcap[notfound] = -1
         return rcap
 
 def moore_structure(ndim=2, directed=False):
