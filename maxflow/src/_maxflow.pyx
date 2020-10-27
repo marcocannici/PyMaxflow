@@ -546,7 +546,7 @@ cdef public class GraphInt [object PyObject_GraphInt, type GraphInt]:
             
             segment = self.thisptr.what_segment(i)
             
-            g.node[i]['segment'] = segment
+            g.nodes[i]['segment'] = segment
             
             rcap = self.thisptr.get_trcap(i)
             if rcap > 0.0:
@@ -559,7 +559,8 @@ cdef public class GraphInt [object PyObject_GraphInt, type GraphInt]:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    def get_edge_rcaps(self, np.ndarray[np.int64_t, ndim=2] nodes_id):
+    def get_edge_rcaps(self, np.ndarray[np.int64_t, ndim=2] nodes_id,
+                       int notfound_val = -1):
         """
         Returns the residual capacity on each arc in the graph. Given a numpy
         array of shape (nedges, 2) specifying the starting and ending nodes of
@@ -606,7 +607,7 @@ cdef public class GraphInt [object PyObject_GraphInt, type GraphInt]:
                             rcap[i] = rcap[i] + cap
                             notfound[i] = False
                     e = self.thisptr.get_next_arc(e)
-        rcap[notfound] = -1
+        rcap[notfound] = notfound_val
         return rcap
 
 cdef public class GraphFloat [object PyObject_GraphFloat, type GraphFloat]:
@@ -1043,7 +1044,7 @@ cdef public class GraphFloat [object PyObject_GraphFloat, type GraphFloat]:
             
             segment = self.thisptr.what_segment(i)
             
-            g.node[i]['segment'] = segment
+            g.nodes[i]['segment'] = segment
             
             rcap = self.thisptr.get_trcap(i)
             if rcap > 0.0:
@@ -1056,7 +1057,8 @@ cdef public class GraphFloat [object PyObject_GraphFloat, type GraphFloat]:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    def get_edge_rcaps(self, np.ndarray[np.int64_t, ndim=2] nodes_id):
+    def get_edge_rcaps(self, np.ndarray[np.int64_t, ndim=2] nodes_id,
+                       double notfound_val = -1):
         """
         Returns the residual capacity on each arc in the graph. Given a numpy
         array of shape (nedges, 2) specifying the starting and ending nodes of
@@ -1104,7 +1106,7 @@ cdef public class GraphFloat [object PyObject_GraphFloat, type GraphFloat]:
                             rcap[i] = rcap[i] + cap
                             notfound[i] = False
                     e = self.thisptr.get_next_arc(e)
-        rcap[notfound] = -1
+        rcap[notfound] = notfound_val
         return rcap
 
 def moore_structure(ndim=2, directed=False):
